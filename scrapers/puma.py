@@ -5,6 +5,7 @@ Puma India product page scraper using Playwright with stealth settings.
 
 import logging
 import re
+import asyncio
 from datetime import datetime
 from typing import Optional
 

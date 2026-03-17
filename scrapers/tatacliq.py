@@ -47,7 +47,7 @@ class TataCliqScraper(BaseScraper):
             )
             page = await ctx.new_page()
             try:
-                await page.goto(url, timeout=35_000, wait_until="networkidle")
+                await page.goto(url, timeout=60_000, wait_until="domcontentloaded")
                 await page.wait_for_timeout(2000)
 
                 title = await self._extract_title(page)

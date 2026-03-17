@@ -27,7 +27,7 @@ HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
 }
 
-TIMEOUT = 20  # seconds
+TIMEOUT = 45  # seconds
 
 # Common CSS selectors tried in order
 PRICE_SELECTORS = [

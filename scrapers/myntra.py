@@ -5,6 +5,7 @@ Myntra is a heavily JS-rendered SPA with anti-bot measures.
 """
 
 import logging
+import asyncio
 from datetime import datetime
 from typing import Optional
 
