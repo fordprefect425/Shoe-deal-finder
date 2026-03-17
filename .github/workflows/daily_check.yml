@@ -21,16 +21,15 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install -r shoe-deal-bot/requirements.txt
+          pip install -r requirements.txt
           python -m playwright install --with-deps chromium
 
       - name: Create Config File from Secret
         run: |
-          mkdir -p shoe-deal-bot/data
+          mkdir -p data
           # Use the CONFIG_JSON secret from GitHub
-          echo '${{ secrets.CONFIG_JSON }}' > shoe-deal-bot/data/config.json
+          echo '${{ secrets.CONFIG_JSON }}' > data/config.json
 
       - name: Run Price Check
         run: |
-          cd shoe-deal-bot
           python run_once.py
