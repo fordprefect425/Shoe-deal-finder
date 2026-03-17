@@ -32,6 +32,10 @@ def get_scraper(site_name: str, site_type: str = "requests") -> Optional[BaseScr
         cls = getattr(mod, class_name)
         return cls()
 
-    # Fallback: generic scraper
+    # Fallback: generic scrapers
+    if site_type == "playwright":
+        from scrapers.playwright_generic import PlaywrightGenericScraper
+        return PlaywrightGenericScraper()
+    
     from scrapers.generic import GenericScraper
     return GenericScraper()

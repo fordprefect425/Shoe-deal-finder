@@ -52,16 +52,54 @@ class MyntraScraper(BaseScraper):
                     "Referer": "https://www.google.com/",
                 },
             )
-            # Mask webdriver property
-            await ctx.add_init_script(
-                "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
-            )
+            # Enhanced Stealth: Mask various fingerprints
+            await ctx.add_init_script("""
+                // Mask WebGL
+                const getParameter = WebGLRenderingContext.prototype.getParameter;
+                WebGLRenderingContext.prototype.getParameter = function(parameter) {
+                    if (parameter === 37445) return 'Intel Open Source Technology Center';
+                    if (parameter === 37446) return 'Mesa DRI Intel(R) HD Graphics 520 (Skylake GT2)';
+                    return getParameter(parameter);
+                };
+                // Mask Canvas
+                const originalToDataURL = HTMLCanvasElement.prototype.toDataURL;
+                HTMLCanvasElement.prototype.toDataURL = function(type) {
+                    if (type === 'image/png' && this.width === 400 && this.height === 200) {
+                        return originalToDataURL.apply(this, arguments); 
+                    }
+                    return originalToDataURL.apply(this, arguments);
+                };
+                // Mask Webdriver (already done but extra check)
+                Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+                // Languages
+                Object.defineProperty(navigator, 'languages', {get: () => ['en-IN', 'en-US', 'en']});
+            """)
             page = await ctx.new_page()
             try:
                 # Add a small random jitter before navigation
-                await asyncio.sleep(random.uniform(1.0, 3.0))
+                await asyncio.sleep(random.uniform(2.0, 5.0))
+                
+                # Navigate initially to homepage to build some session context
+                try:
+                    await page.goto("https://www.myntra.com/", timeout=30_000, wait_until="domcontentloaded")
+                    await asyncio.sleep(random.uniform(1, 2))
+                except: pass
+
                 await page.goto(url, timeout=60_000, wait_until="domcontentloaded")
                 await page.wait_for_timeout(random.randint(5000, 8000))
+
+                # Human-like interaction: Scroll
+                await page.evaluate("window.scrollTo(0, document.body.scrollHeight / 2)")
+                await asyncio.sleep(random.uniform(1, 2))
+                await page.evaluate("window.scrollTo(0, 0)")
+                await page.wait_for_timeout(2000)
+
+                # Check if we hit the "Oops" page
+                content_text = (await page.inner_text("body")).lower()
+                if "oops! something went wrong" in content_text or "access denied" in content_text:
+                    logger.warning("Myntra bot detection triggered for %s", url)
+                    return {"error": "Bot detected (Oops page)", "product_url": url}
+
 
                 title = await self._extract_title(page)
                 price = await self._extract_price(page)
