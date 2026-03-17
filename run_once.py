@@ -54,7 +54,23 @@ async def main():
     # Run the check
     from core.checker import run_check
     # We set force_summary=True so that every single run of this script sends a message
-    await run_check(config, send_telegram_fn=send_fn, force_summary=True)
+    results = await run_check(config, send_telegram_fn=send_fn, force_summary=True)
+    
+    # Detailed logging for GitHub Actions console
+    for res in results:
+        shoe_name = res["shoe_config"]["name"]
+        best = res.get("best_offer")
+        print(f"\nSHOE: {shoe_name}")
+        if best:
+            print(f"  ✅ Best Price: {best['price']} at {best['site_name']}")
+        else:
+            print(f"  ❌ No valid price found")
+        
+        for offer in res.get("all_offers", []):
+            status = "OK" if not offer.get("error") else f"ERROR: {offer['error']}"
+            price = offer.get("price", "N/A")
+            print(f"    - {offer['site_name']}: {price} [{status}]")
+
     logger.info("One-off check complete.")
 
 if __name__ == "__main__":

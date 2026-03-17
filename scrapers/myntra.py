@@ -27,17 +27,20 @@ class MyntraScraper(BaseScraper):
     async def scrape(self, url: str, size: Optional[str] = None) -> dict:
         from playwright.async_api import async_playwright
 
+        import random
+        user_agents = [
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        ]
+
         async with async_playwright() as p:
             browser = await p.chromium.launch(
                 headless=True,
                 args=STEALTH_ARGS,
             )
             ctx = await browser.new_context(
-                user_agent=(
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                    "AppleWebKit/537.36 (KHTML, like Gecko) "
-                    "Chrome/122.0.0.0 Safari/537.36"
-                ),
+                user_agent=random.choice(user_agents),
                 locale="en-IN",
                 viewport={"width": 1440, "height": 900},
                 extra_http_headers={
@@ -45,6 +48,7 @@ class MyntraScraper(BaseScraper):
                     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
                     "sec-ch-ua": '"Chromium";v="122", "Not(A:Brand";v="24"',
                     "sec-ch-ua-platform": '"Windows"',
+                    "Referer": "https://www.google.com/",
                 },
             )
             # Mask webdriver property
@@ -53,8 +57,10 @@ class MyntraScraper(BaseScraper):
             )
             page = await ctx.new_page()
             try:
-                await page.goto(url, timeout=45_000, wait_until="domcontentloaded")
-                await page.wait_for_timeout(4000)
+                # Add a small random jitter before navigation
+                await asyncio.sleep(random.uniform(1.0, 3.0))
+                await page.goto(url, timeout=60_000, wait_until="domcontentloaded")
+                await page.wait_for_timeout(random.randint(5000, 8000))
 
                 title = await self._extract_title(page)
                 price = await self._extract_price(page)

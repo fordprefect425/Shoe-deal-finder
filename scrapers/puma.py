@@ -26,21 +26,24 @@ class PumaScraper(BaseScraper):
     async def scrape(self, url: str, size: Optional[str] = None) -> dict:
         from playwright.async_api import async_playwright
 
+        import random
+        user_agents = [
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        ]
+
         async with async_playwright() as p:
             browser = await p.chromium.launch(
                 headless=True,
                 args=STEALTH_ARGS,
             )
             ctx = await browser.new_context(
-                user_agent=(
-                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                    "AppleWebKit/537.36 (KHTML, like Gecko) "
-                    "Chrome/122.0.0.0 Safari/537.36"
-                ),
+                user_agent=random.choice(user_agents),
                 locale="en-IN",
                 viewport={"width": 1440, "height": 900},
                 extra_http_headers={
                     "Accept-Language": "en-IN,en;q=0.9",
+                    "Referer": "https://www.google.com/",
                 },
             )
             await ctx.add_init_script(
@@ -48,8 +51,9 @@ class PumaScraper(BaseScraper):
             )
             page = await ctx.new_page()
             try:
-                await page.goto(url, timeout=40_000, wait_until="domcontentloaded")
-                await page.wait_for_timeout(3000)
+                await asyncio.sleep(random.uniform(1.0, 3.0))
+                await page.goto(url, timeout=60_000, wait_until="domcontentloaded")
+                await page.wait_for_timeout(random.randint(4000, 7000))
 
                 title = await self._extract_title(page)
                 price = await self._extract_price(page)
