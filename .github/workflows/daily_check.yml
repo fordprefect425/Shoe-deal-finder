@@ -1,0 +1,36 @@
+name: Daily Shoe Price Check
+
+on:
+  schedule:
+    # Run at 03:30 UTC which is 09:00 IST
+    - cron: '30 3 * * *'
+  workflow_dispatch:  # Manual trigger from GitHub UI
+
+jobs:
+  run-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          pip install -r shoe-deal-bot/requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Create Config File from Secret
+        run: |
+          mkdir -p shoe-deal-bot/data
+          # Use the CONFIG_JSON secret from GitHub
+          echo '${{ secrets.CONFIG_JSON }}' > shoe-deal-bot/data/config.json
+
+      - name: Run Price Check
+        run: |
+          cd shoe-deal-bot
+          python run_once.py
